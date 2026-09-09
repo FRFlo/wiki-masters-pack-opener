@@ -4,7 +4,7 @@ import { getAccount } from "../services/db";
 import { WikiMasters } from "../services/wiki";
 import type { SlashCommand } from "../types";
 
-const command: SlashCommand = {
+export default {
 	command: new SlashCommandBuilder()
 		.setName("collection")
 		.setDescription("Collection et étiquetage")
@@ -23,7 +23,7 @@ const command: SlashCommand = {
 		.addSubcommand((s) =>
 			s
 				.setName("taguer")
-				.setDescription("Appliquer un tag")
+				.setDescription("Appliquer un tag aux cartes trouvées")
 				.addStringOption((o) =>
 					o
 						.setName("tag")
@@ -32,14 +32,19 @@ const command: SlashCommand = {
 						.setRequired(true),
 				)
 				.addStringOption((o) =>
-					o.setName("ids").setDescription("IDs séparés par ;").setRequired(true),
+					o
+						.setName("ids")
+						.setDescription("IDs user_card séparés par ;")
+						.setRequired(true),
 				),
 		),
 	execute: async (i) => {
 		const r = await requireApi(i);
 		if (!r) return;
-		await i.deferReply();
 		const sub = i.options.getSubcommand();
+		await i.deferReply();
+		const d: any = await r.api.collection(0, 50);
+		const all: any[] = d?.collection || [];
 		if (sub === "stats") {
 			const d: any = await r.api.collectionStats();
 			const data = d?.stats || d?.data || d;
@@ -55,8 +60,6 @@ const command: SlashCommand = {
 			await r.api.tagCards(ids, tag.id);
 			return i.editReply(`🏷️ ${ids.length} carte(s) taguée(s).`);
 		}
-		const d: any = await r.api.collection(0, 50);
-		const all: any[] = d?.collection || [];
 		if (sub === "chercher") {
 			const terms = splitTerms(i.options.getString("texte", true).toLowerCase());
 			const hit = all.filter((x) =>
@@ -85,18 +88,8 @@ const command: SlashCommand = {
 			}`,
 		);
 	},
-};
+} as SlashCommand;
 
-function splitTerms(value: string) {
-	return value
-		.split(";")
-		.map((term) => term.trim())
-		.filter(Boolean);
-}
-function formatData(data: unknown) {
-	const value = JSON.stringify(data);
-	return value.length > 1800 ? `${value.slice(0, 1800)}…` : value;
-}
 async function reply(i: ChatInputCommandInteraction, content: string, ephemeral = false) {
 	return i.replied || i.deferred ? i.editReply(content) : i.reply({ content, ephemeral });
 }
@@ -108,5 +101,12 @@ async function requireApi(i: ChatInputCommandInteraction) {
 	}
 	return { account, api: new WikiMasters(account) };
 }
-
-export default command;
+const splitTerms = (value: string) =>
+	value
+		.split(";")
+		.map((term) => term.trim())
+		.filter(Boolean);
+const formatData = (data: unknown) => {
+	const value = JSON.stringify(data);
+	return value.length > 1800 ? `${value.slice(0, 1800)}…` : value;
+};
