@@ -1,25 +1,49 @@
-# Wiki Masters — pack opener
+# Wiki Masters Discord Bot
 
-Petit worker Docker qui appelle périodiquement `POST /api/packs/open`.
+Bot Discord réécrit en **Bun + SQLite**, avec des commandes slash et une
+automatisation HTTP de Wiki Masters. La base est persistée dans un volume Docker.
 
 ## Configuration
 
-L’API répond `401 Non autorisé` sans session. `COOKIE` doit donc contenir le
-cookie HTTP de session actif, par exemple `session=...` (sans le préfixe
-`Cookie:`). La requête POST est envoyée sans payload ni corps.
+Copier `.env.example` vers `.env`, puis renseigner :
 
-## Lancement
+- `DISCORD_TOKEN`
+- `DISCORD_CLIENT_ID`
+- `DISCORD_GUILD_ID`
+
+Le cookie Wiki Masters est fourni ensuite par `/compte connecter`. La réponse
+est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discord.
+
+## Commandes disponibles
+
+- `/compte connecter`, `/compte statut`, `/compte supprimer`
+- `/pack ouvrir`, `/pack auto`
+- `/marche scan`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`
+- `/vente lancer`, `/vente configurer`
+- `/collection chercher`, `/collection doublons`, `/collection taguer`
+- `/stats`
+- `/planning`
+
+Le scheduler exécute les modules activés avec des horaires séparés (`pack`,
+`market`, `trash`). Le fuseau par défaut est Europe/Paris.
+
+## Docker
 
 ```sh
 cp .env.example .env
-# renseigner COOKIE dans .env
 docker compose up -d --build
 docker compose logs -f
 ```
 
-`INTERVAL` accepte `ms`, `s`, `m`, `h` et `d` (`1h` par défaut). Le premier
-appel est effectué immédiatement, puis à chaque intervalle. Les réponses sont
-journalisées en JSON avec leur statut HTTP; le cookie n’est jamais affiché.
+SQLite est monté dans `/data/wiki-masters.sqlite`. Le workflow
+`.github/workflows/docker.yml` construit et publie l’image sur GHCR à chaque
+push sur `main` ou tag `v*`.
 
-> Utilisez uniquement une session et des packs que vous êtes autorisé à
-> ouvrir, et respectez les règles de Wiki Masters et les limites de l’API.
+## Limite HTTP-only
+
+Les endpoints utilisés sont `/api/packs/open`, `/api/marketplace`,
+`/api/my-collection`, `/api/wikibidous`, `/api/trades` et les endpoints
+Supabase nécessaires aux tags. Wiki Masters a historiquement refusé certaines
+mises en vente via `POST /api/marketplace` alors qu’un clic dans l’interface
+fonctionnait. Ce bot n’utilise volontairement aucun navigateur : les erreurs
+HTTP sont journalisées et les ventes sont retentées au cycle suivant.

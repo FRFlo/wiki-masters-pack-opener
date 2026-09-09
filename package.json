@@ -1,9 +1,17 @@
 {
-  "name": "wiki-masters-pack-opener",
-  "version": "1.0.0",
+  "name": "wiki-masters-discord-bot",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node src/index.mjs"
+    "start": "bun run src/index.ts",
+    "check": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.2"
   }
 }

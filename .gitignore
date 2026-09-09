@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+cookie
 node_modules/
 npm-debug.log*
 .pi/
