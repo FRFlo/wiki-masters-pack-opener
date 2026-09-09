@@ -56,6 +56,9 @@ const commands = [
 		.setDescription("Pack Opener")
 		.addSubcommand((s) => s.setName("ouvrir").setDescription("Ouvrir un pack maintenant"))
 		.addSubcommand((s) =>
+			s.setName("bonus").setDescription("Réclamer le pack bonus PRO du jour"),
+		)
+		.addSubcommand((s) =>
 			s
 				.setName("auto")
 				.setDescription("Activer ou désactiver l’ouverture automatique")
@@ -67,6 +70,7 @@ const commands = [
 		.setName("marche")
 		.setDescription("Market Watcher")
 		.addSubcommand((s) => s.setName("scan").setDescription("Scanner les enchères"))
+		.addSubcommand((s) => s.setName("mes-ventes").setDescription("Voir mes ventes actives"))
 		.addSubcommand((s) =>
 			s
 				.setName("miser")
@@ -136,6 +140,9 @@ const commands = [
 		)
 		.addSubcommand((s) => s.setName("doublons").setDescription("Lister les doublons"))
 		.addSubcommand((s) =>
+			s.setName("stats").setDescription("Voir les statistiques de collection"),
+		)
+		.addSubcommand((s) =>
 			s
 				.setName("taguer")
 				.setDescription("Appliquer un tag aux cartes trouvées")
@@ -150,6 +157,17 @@ const commands = [
 				),
 		),
 	new SlashCommandBuilder().setName("stats").setDescription("Statistiques et santé du bot"),
+	new SlashCommandBuilder()
+		.setName("cote")
+		.setDescription("Voir la cote d’une carte")
+		.addStringOption((o) =>
+			o.setName("carte").setDescription("ID de la carte").setRequired(true),
+		),
+	new SlashCommandBuilder().setName("succes").setDescription("Voir les succès et récompenses"),
+	new SlashCommandBuilder()
+		.setName("guilde")
+		.setDescription("Voir les souhaits et dons de la guilde"),
+	new SlashCommandBuilder().setName("souhaits").setDescription("Voir ma liste de souhaits"),
 	new SlashCommandBuilder()
 		.setName("echange")
 		.setDescription("Gérer un échange")
@@ -301,6 +319,62 @@ client.on("interactionCreate", async (i) => {
 				`📊 **Statistiques**\n${rows.map((x) => `• ${x.type}: ${x.count}`).join("\n") || "Aucun événement."}`,
 			);
 		}
+		if (["cote", "succes", "guilde", "souhaits"].includes(i.commandName)) {
+			const r = await requireApi(i);
+			if (!r) return;
+			await i.deferReply();
+			if (i.commandName === "cote") {
+				const cardId = i.options.getString("carte", true);
+				const d: any = await r.api.salesSummary(cardId);
+				const summary = d?.summary || d;
+				return i.editReply(
+					`📈 **Cote ${cardId}**\n` +
+						`Ventes : ${summary?.count ?? summary?.sales_count ?? "?"}\n` +
+						`Dernier prix : ${summary?.last_price ?? "?"} 💰\n` +
+						`Moyenne : ${summary?.average ?? summary?.avg_price ?? "?"} 💰\n` +
+						`Min / max : ${summary?.min ?? "?"} / ${summary?.max ?? "?"} 💰`,
+				);
+			}
+			if (i.commandName === "succes") {
+				const rows: any[] = await r.api.achievements();
+				const unlocked = rows.filter((x) => x.progress?.unlocked_at).length;
+				const claimable = rows.filter(
+					(x) => x.progress?.unlocked_at && !x.progress?.claimed_at,
+				).length;
+				return i.editReply(
+					`🏆 **Succès : ${unlocked}/${rows.length} débloqués** — ${claimable} récompense(s) à réclamer\n` +
+						(rows
+							.filter((x) => x.progress?.unlocked_at && !x.progress?.claimed_at)
+							.slice(0, 15)
+							.map((x) => `• ${x.title} — ${x.wikibidous_reward ?? "?"} 💰`)
+							.join("\n") || "Aucune récompense en attente."),
+				);
+			}
+			if (i.commandName === "guilde") {
+				const d: any = await r.api.guildHome();
+				const h = d?.guild ? d : d?.data || {};
+				const wishes = Array.isArray(h.wishlist) ? h.wishlist : [];
+				const serveable = wishes.filter((x: any) => x.can_donate && !x.is_self).length;
+				return i.editReply(
+					`🏰 **${h.guild?.name || "Guilde"}**\n` +
+						`Karma cette semaine : ${h.guild?.karma_this_week ?? "?"}\n` +
+						`Dons : ${h.guild?.donations_this_week ?? "?"}\n` +
+						`Cartes que tu peux donner : ${serveable}`,
+				);
+			}
+			const d: any = await r.api.wishlist(0);
+			const cards = d?.cards || d?.data?.cards || [];
+			return i.editReply(
+				`⭐ **Ma liste de souhaits** (${d?.total ?? cards.length})\n` +
+					(cards
+						.slice(0, 30)
+						.map(
+							(x: any) =>
+								`• ${x.wikipedia_title || x.title || x.id} — ${x.rarity || "?"}`,
+						)
+						.join("\n") || "Aucun souhait."),
+			);
+		}
 		if (i.commandName === "menu") {
 			return i.reply({
 				content: "🎛️ **Wiki Masters Bot**",
@@ -370,6 +444,12 @@ client.on("interactionCreate", async (i) => {
 		const { api, account } = r;
 		if (i.commandName === "pack") {
 			const sub = i.options.getSubcommand();
+			if (sub === "bonus") {
+				await i.deferReply();
+				const data = await api.proDailyPack();
+				recordEvent(account.id, "bonus_pack_opened", data);
+				return i.editReply(`🎁 Pack bonus réclamé !\n${formatData(data)}`);
+			}
 			if (sub === "auto") {
 				setSetting(account.id, "pack_enabled", i.options.getBoolean("active", true));
 				return reply(i, "✅ Pack Opener mis à jour.");
@@ -381,6 +461,20 @@ client.on("interactionCreate", async (i) => {
 		}
 		if (i.commandName === "marche") {
 			const sub = i.options.getSubcommand();
+			if (sub === "mes-ventes") {
+				await i.deferReply();
+				const sales: any[] = await api.myActiveSales();
+				return i.editReply(
+					`💼 **Mes ventes actives : ${sales.length}**\n` +
+						sales
+							.slice(0, 20)
+							.map(
+								(x) =>
+									`• [${x.id}] ${x.snapshot_rarity || "?"} — ${x.current_bid ?? x.base_amount ?? "?"} 💰`,
+							)
+							.join("\n"),
+				);
+			}
 			if (sub === "miser") {
 				const id = i.options.getString("enchere", true),
 					amount = i.options.getInteger("montant", true);
@@ -488,6 +582,13 @@ client.on("interactionCreate", async (i) => {
 							.map(([id, n]) => `• [${id}] ×${n}`)
 							.join("\n") || "Aucun."
 					}`,
+				);
+			}
+			if (sub === "stats") {
+				const d: any = await api.collectionStats();
+				const data = d?.stats || d?.data || d;
+				return i.editReply(
+					`📚 **Collection** : ${data?.total ?? "?"} cartes\n${formatData(data?.rarityCounts || data)}`,
 				);
 			}
 			const ids = i.options.getString("ids", true).split(";").filter(Boolean);

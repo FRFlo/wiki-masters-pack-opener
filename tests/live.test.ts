@@ -32,4 +32,23 @@ describe.skipIf(!enabled)("Wiki Masters authenticated API", () => {
 		expect(mine).toBeDefined();
 		expect(collection).toBeDefined();
 	});
+
+	test("reads account analytics and personal market data", async () => {
+		const [collectionStats, sales, wishes, notifications] = await Promise.all([
+			wiki.collectionStats(),
+			wiki.myActiveSales(),
+			wiki.wishlist(0),
+			wiki.notifications(),
+		]);
+		expect(collectionStats).toBeDefined();
+		expect(sales).toBeArray();
+		expect(wishes).toBeDefined();
+		expect(notifications).toBeDefined();
+	});
+
+	test("reads guild and achievement data", async () => {
+		const [guild, achievements] = await Promise.all([wiki.guildHome(), wiki.achievements()]);
+		expect(guild).toBeDefined();
+		expect(achievements).toBeArray();
+	});
 });

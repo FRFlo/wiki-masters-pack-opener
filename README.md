@@ -18,9 +18,11 @@ est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discor
 
 - `/compte connecter`, `/compte statut`, `/compte supprimer`
 - `/pack ouvrir`, `/pack auto`
-- `/marche scan`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`
+- `/pack bonus`
+- `/marche scan`, `/marche mes-ventes`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`
 - `/vente lancer`, `/vente configurer`
-- `/collection chercher`, `/collection doublons`, `/collection taguer`
+- `/collection chercher`, `/collection doublons`, `/collection stats`, `/collection taguer`
+- `/cote`, `/succes`, `/guilde`, `/souhaits`
 - `/stats`
 - `/planning`
 

@@ -33,11 +33,20 @@ export class WikiMasters {
 	openPack() {
 		return this.request("/packs/open", { method: "POST" });
 	}
+	proDailyPack() {
+		return this.request("/packs/pro-daily", { method: "POST" });
+	}
+	specialPacks() {
+		return this.request("/packs/special");
+	}
 	balance() {
 		return this.request("/wikibidous");
 	}
 	market(page = 1, limit = 50) {
 		return this.request(`/marketplace?page=${page}&limit=${limit}&sort=ending_soon`);
+	}
+	recentMarket(page = 0, limit = 50) {
+		return this.request(`/marketplace?page=${page}&limit=${limit}&sort=recent`);
 	}
 	auction(id: string) {
 		return this.request(`/marketplace/${encodeURIComponent(id)}`);
@@ -59,6 +68,21 @@ export class WikiMasters {
 	}
 	sales(cardId: string) {
 		return this.request(`/marketplace/cards/${encodeURIComponent(cardId)}/sales`);
+	}
+	salesSummary(cardId: string) {
+		return this.request(`/marketplace/cards/${encodeURIComponent(cardId)}/sales?scope=summary`);
+	}
+	collectionStats() {
+		return this.request("/my-collection/stats");
+	}
+	notifications() {
+		return this.request("/notifications");
+	}
+	wishlist(page = 0) {
+		return this.request(`/cards?page=${page}&wishlist=1`);
+	}
+	guildHome() {
+		return this.request("/guilds/home");
 	}
 	sell(cardId: string, price: number, duration: number) {
 		return this.request("/marketplace", {
@@ -89,6 +113,11 @@ export class WikiMasters {
 			`auctions?seller_id=eq.${encodeURIComponent(userId)}&status=eq.active&select=*&order=end_at.asc`,
 		);
 	}
+	myActiveSales(userId = this.userId()) {
+		return this.supabase(
+			`auctions?seller_id=eq.${encodeURIComponent(userId)}&status=eq.active&end_at=gt.${encodeURIComponent(new Date().toISOString())}&select=id,card_id,base_amount,current_bid,end_at,status,snapshot_rarity,final_price&order=end_at.asc&limit=50`,
+		);
+	}
 	wonAuctions(userId: string) {
 		return this.supabase(
 			`auctions?winner_id=eq.${encodeURIComponent(userId)}&select=*&order=settled_at.desc&limit=200`,
@@ -96,6 +125,19 @@ export class WikiMasters {
 	}
 	card(cardId: string) {
 		return this.supabase(`cards?id=eq.${encodeURIComponent(cardId)}&select=*&limit=1`);
+	}
+	async achievements(userId = this.userId()) {
+		const [catalog, owned] = await Promise.all([
+			this.supabase("achievements?select=id,title,description,wikibidous_reward&limit=200"),
+			this.supabase(
+				`user_achievements?user_id=eq.${encodeURIComponent(userId)}&select=achievement_id,unlocked_at,claimed_at&limit=200`,
+			),
+		]);
+		const byId = new Map((owned as any[]).map((item) => [item.achievement_id, item]));
+		return (catalog as any[]).map((item) => ({ ...item, progress: byId.get(item.id) || null }));
+	}
+	profile() {
+		return this.supabase("rpc/get_my_profile", { method: "POST", body: "{}" });
 	}
 	async monthlyViews(title: string) {
 		const now = new Date();
