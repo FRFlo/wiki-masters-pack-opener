@@ -1,0 +1,8 @@
+services:
+  pack-opener:
+    build: .
+    restart: unless-stopped
+    environment:
+      COOKIE: ${COOKIE}
+      INTERVAL: ${INTERVAL:-1h}
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-30s}
