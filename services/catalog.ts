@@ -1,6 +1,6 @@
-import type { Account } from "./db";
-import { clearCatalog, upsertCatalog } from "./db";
-import { WikiMasters } from "./wiki";
+import type { Account } from "../services/db";
+import { clearCatalog, upsertCatalog } from "../services/db";
+import { WikiMasters } from "../services/wiki";
 
 const MAX_COLLECTION_PAGES = 20;
 const inFlight = new Set<number>();

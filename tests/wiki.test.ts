@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { WikiMasters } from "../src/wiki";
+import { WikiMasters } from "../services/wiki";
 
 const account = (cookie = "") => ({
 	id: 1,

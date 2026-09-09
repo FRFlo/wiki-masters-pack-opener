@@ -23,7 +23,7 @@ const {
 	stats,
 	upsertCatalog,
 	upsertAccount,
-} = await import("../src/db");
+} = await import("../services/db");
 
 beforeAll(() => {
 	db.exec("DELETE FROM accounts");

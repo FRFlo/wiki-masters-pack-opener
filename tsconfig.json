@@ -7,5 +7,14 @@
 		"skipLibCheck": true,
 		"types": ["bun"]
 	},
-	"include": ["src/**/*.ts"]
+	"include": [
+		"src/**/*.ts",
+		"commands/**/*.ts",
+		"buttons/**/*.ts",
+		"events/**/*.ts",
+		"handlers/**/*.ts",
+		"services/**/*.ts",
+		"types.ts",
+		"config.ts"
+	]
 }
