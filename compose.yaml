@@ -1,15 +1,15 @@
 services:
-  wiki-masters-bot:
-    build: .
-    restart: unless-stopped
-    environment:
-      DISCORD_TOKEN: ${DISCORD_TOKEN}
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
-      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
-      SCHEDULER_INTERVAL_MS: ${SCHEDULER_INTERVAL_MS:-180000}
-      DATABASE_PATH: /data/wiki-masters.sqlite
-    volumes:
-      - wiki-masters-data:/data
+    wiki-masters-bot:
+        build: .
+        restart: unless-stopped
+        environment:
+            DISCORD_TOKEN: ${DISCORD_TOKEN}
+            DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+            DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+            SCHEDULER_INTERVAL_MS: ${SCHEDULER_INTERVAL_MS:-180000}
+            DATABASE_PATH: /data/wiki-masters.sqlite
+        volumes:
+            - wiki-masters-data:/data
 
 volumes:
-  wiki-masters-data:
+    wiki-masters-data:
