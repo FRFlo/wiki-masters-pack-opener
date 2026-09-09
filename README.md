@@ -18,6 +18,7 @@ Plusieurs cookies peuvent être enregistrés sous des noms différents ;
 
 ## Commandes disponibles
 
+- `/guide` (sections `demarrage`, `packs`, `marche`, `collection`, `automatisation`)
 - `/compte connecter`, `/compte lister`, `/compte statut`, `/compte supprimer`
 - `/account list`, `/account select`
 - `/pack ouvrir`, `/pack auto`
