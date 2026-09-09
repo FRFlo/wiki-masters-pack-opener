@@ -13,7 +13,16 @@ export default async (client: Client) => {
 		client.commands.set(c.command.name, c);
 		all.push(c.command.toJSON());
 	}
-	await new REST({ version: "10" })
-		.setToken(config.token)
-		.put(Routes.applicationGuildCommands(config.clientId, config.guildId), { body: all });
+	try {
+		await new REST({ version: "10" })
+			.setToken(config.token)
+			.put(Routes.applicationGuildCommands(config.clientId, config.guildId), { body: all });
+		console.log(`Commandes slash enregistrées dans le serveur ${config.guildId}.`);
+	} catch (error) {
+		console.error(
+			`Impossible d’enregistrer les commandes dans ${config.guildId}. ` +
+				"Vérifie que le bot a été ajouté à ce serveur et que DISCORD_GUILD_ID est correct.",
+			error,
+		);
+	}
 };
