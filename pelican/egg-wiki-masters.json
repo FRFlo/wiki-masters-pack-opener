@@ -1,0 +1,88 @@
+{
+	"meta": {
+		"version": "PTDL_v2",
+		"update_url": null
+	},
+	"exported_at": "2026-09-09T00:00:00+00:00",
+	"name": "Wiki Masters Discord Bot",
+	"author": "frflo@users.noreply.github.com",
+	"description": "Bun + SQLite Discord bot for Wiki Masters.",
+	"features": [],
+	"docker_images": {
+		"Bun Latest": "ghcr.io/pelican-eggs/yolks:bun_latest"
+	},
+	"file_denylist": [],
+	"startup": "bun install --frozen-lockfile && bun run start",
+	"config": {
+		"files": "{}",
+		"startup": "{}",
+		"stop": "SIGINT",
+		"logs": "{}"
+	},
+	"scripts": {
+		"installation": {
+			"script": "#!/bin/bash\nset -euo pipefail\ncd /mnt/server\nif [ ! -f package.json ]; then\n    echo 'Upload the Wiki Masters bot files before starting this server.'\n    exit 1\nfi\necho 'Wiki Masters bot files detected.'",
+			"container": "ghcr.io/pelican-eggs/installers:debian",
+			"entrypoint": "bash"
+		}
+	},
+	"startup_commands": {
+		"Default": "bun install --frozen-lockfile && bun run start"
+	},
+	"variables": [
+		{
+			"name": "Discord token",
+			"description": "Discord bot token.",
+			"env_variable": "DISCORD_TOKEN",
+			"default_value": "",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:255"
+		},
+		{
+			"name": "Discord application ID",
+			"description": "Discord application/client ID.",
+			"env_variable": "DISCORD_CLIENT_ID",
+			"default_value": "",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:32"
+		},
+		{
+			"name": "Discord guild ID",
+			"description": "Discord server/guild ID for command registration.",
+			"env_variable": "DISCORD_GUILD_ID",
+			"default_value": "",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:32"
+		},
+		{
+			"name": "Database path",
+			"description": "Persistent SQLite database location.",
+			"env_variable": "DATABASE_PATH",
+			"default_value": "/home/container/data/wiki-masters.sqlite",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:255"
+		},
+		{
+			"name": "Scheduler interval",
+			"description": "Automation scheduler interval in milliseconds.",
+			"env_variable": "SCHEDULER_INTERVAL_MS",
+			"default_value": "180000",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|integer|min:1000"
+		},
+		{
+			"name": "Catalog sync interval",
+			"description": "Autocomplete catalog refresh interval in milliseconds.",
+			"env_variable": "CATALOG_SYNC_INTERVAL_MS",
+			"default_value": "900000",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|integer|min:1000"
+		}
+	]
+}
