@@ -7,6 +7,8 @@ export type Account = {
 	cookie: string;
 	timezone: string;
 	enabled: number;
+	session_id?: number;
+	session_name?: string;
 };
 
 const db = new Database(process.env.DATABASE_PATH || "/data/wiki-masters.sqlite", { create: true });
@@ -17,6 +19,12 @@ CREATE TABLE IF NOT EXISTS accounts (
   name TEXT NOT NULL DEFAULT 'Mon compte', cookie TEXT NOT NULL,
   timezone TEXT NOT NULL DEFAULT 'Europe/Paris', enabled INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS account_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER NOT NULL,
+  name TEXT NOT NULL, cookie TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(account_id, name), FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS settings (
   account_id INTEGER NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL,
@@ -46,23 +54,100 @@ CREATE TABLE IF NOT EXISTS catalog (
   FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 `);
+try {
+	db.exec("ALTER TABLE accounts ADD COLUMN active_session_id INTEGER");
+} catch {}
+for (const account of db.query("SELECT id,name,cookie FROM accounts").all() as Account[]) {
+	const session = db
+		.query("SELECT id FROM account_sessions WHERE account_id=? ORDER BY id LIMIT 1")
+		.get(account.id) as { id: number } | null;
+	if (!session)
+		db.query("INSERT INTO account_sessions(account_id,name,cookie) VALUES(?,?,?)").run(
+			account.id,
+			account.name,
+			account.cookie,
+		);
+	const active = db
+		.query("SELECT id FROM account_sessions WHERE account_id=? ORDER BY id LIMIT 1")
+		.get(account.id) as { id: number };
+	db.query("UPDATE accounts SET active_session_id=COALESCE(active_session_id,?) WHERE id=?").run(
+		active.id,
+		account.id,
+	);
+}
 
 export function getAccount(discordUserId: string) {
-	return db
-		.query("SELECT * FROM accounts WHERE discord_user_id = ?")
-		.get(discordUserId) as Account | null;
+	const account = db
+		.query(
+			`SELECT a.*, s.id session_id, s.name session_name, s.cookie session_cookie
+			 FROM accounts a LEFT JOIN account_sessions s ON s.id=COALESCE(a.active_session_id,
+			 (SELECT id FROM account_sessions WHERE account_id=a.id ORDER BY id LIMIT 1))
+			 WHERE a.discord_user_id = ?`,
+		)
+		.get(discordUserId) as
+		| (Account & { session_cookie?: string; session_name?: string })
+		| null;
+	if (!account) return null;
+	return {
+		...account,
+		name: account.session_name || account.name,
+		cookie: account.session_cookie || account.cookie,
+	} as Account;
 }
 export function listAccounts() {
-	return db.query("SELECT * FROM accounts WHERE enabled=1").all() as Account[];
+	return db
+		.query(
+			`SELECT a.*, s.id session_id, s.name session_name, s.cookie session_cookie
+			 FROM accounts a JOIN account_sessions s ON s.account_id=a.id WHERE a.enabled=1`,
+		)
+		.all()
+		.map((account: any) => ({ ...account, cookie: account.session_cookie })) as Account[];
 }
 export function upsertAccount(discordUserId: string, cookie: string, name = "Mon compte") {
 	db.query(`INSERT INTO accounts(discord_user_id,name,cookie) VALUES(?,?,?)
-    ON CONFLICT(discord_user_id) DO UPDATE SET cookie=excluded.cookie,name=excluded.name,updated_at=CURRENT_TIMESTAMP`).run(
+    ON CONFLICT(discord_user_id) DO UPDATE SET updated_at=CURRENT_TIMESTAMP`).run(
 		discordUserId,
 		name,
 		cookie,
 	);
+	const account = db
+		.query("SELECT id FROM accounts WHERE discord_user_id=?")
+		.get(discordUserId) as { id: number };
+	db.query(`INSERT INTO account_sessions(account_id,name,cookie) VALUES(?,?,?)
+    ON CONFLICT(account_id,name) DO UPDATE SET cookie=excluded.cookie,updated_at=CURRENT_TIMESTAMP`).run(
+		account.id,
+		name,
+		cookie,
+	);
+	const session = db
+		.query("SELECT id FROM account_sessions WHERE account_id=? AND name=?")
+		.get(account.id, name) as { id: number };
+	db.query("UPDATE accounts SET active_session_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").run(
+		session.id,
+		account.id,
+	);
 	return getAccount(discordUserId)!;
+}
+export function listAccountSessions(discordUserId: string) {
+	return db
+		.query(
+			`SELECT s.id,s.name,s.created_at,s.updated_at,s.id=(a.active_session_id) active
+			 FROM account_sessions s JOIN accounts a ON a.id=s.account_id
+			 WHERE a.discord_user_id=? ORDER BY s.id`,
+		)
+		.all(discordUserId) as Array<{ id: number; name: string; active: number }>;
+}
+export function selectAccountSession(discordUserId: string, name: string) {
+	return (
+		db
+			.query(
+				`UPDATE accounts SET active_session_id=(SELECT s.id FROM account_sessions s
+			 WHERE s.account_id=accounts.id AND lower(s.name)=lower(?)),updated_at=CURRENT_TIMESTAMP
+			 WHERE discord_user_id=? AND EXISTS (SELECT 1 FROM account_sessions s JOIN accounts a2 ON a2.id=s.account_id
+			 WHERE a2.discord_user_id=accounts.discord_user_id AND lower(s.name)=lower(?))`,
+			)
+			.run(name, discordUserId, name).changes > 0
+	);
 }
 export function deleteAccount(discordUserId: string) {
 	db.query("DELETE FROM accounts WHERE discord_user_id=?").run(discordUserId);

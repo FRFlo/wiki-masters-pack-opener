@@ -13,6 +13,7 @@ const {
 	listKeywords,
 	listSchedules,
 	listAccounts,
+	listAccountSessions,
 	removeKeyword,
 	clearCatalog,
 	recordEvent,
@@ -20,6 +21,7 @@ const {
 	setKeyword,
 	setSchedule,
 	setSetting,
+	selectAccountSession,
 	stats,
 	upsertCatalog,
 	upsertAccount,
@@ -37,7 +39,7 @@ describe("SQLite persistence", () => {
 
 		expect(updated.cookie).toBe("cookie-a2");
 		expect(getAccount("discord-a")?.name).toBe("A2");
-		expect(listAccounts()).toHaveLength(2);
+		expect(listAccounts()).toHaveLength(3);
 		expect(first.discord_user_id).toBe("discord-a");
 	});
 
@@ -56,6 +58,17 @@ describe("SQLite persistence", () => {
 
 		removeKeyword(account.id, "hunter", " PARIS ");
 		expect(listKeywords(account.id)).toHaveLength(0);
+	});
+
+	test("supports several cookies and switches the active session", () => {
+		upsertAccount("discord-b", "cookie-b-alt", "Secondaire");
+		expect(listAccountSessions("discord-b")).toHaveLength(2);
+		expect(getAccount("discord-b")?.cookie).toBe("cookie-b-alt");
+		expect(selectAccountSession("discord-b", "B")).toBe(true);
+		expect(getAccount("discord-b")?.cookie).toBe("cookie-b");
+		expect(
+			listAccounts().filter((account) => account.discord_user_id === "discord-b"),
+		).toHaveLength(2);
 	});
 
 	test("deletes an account and cascades its data", () => {

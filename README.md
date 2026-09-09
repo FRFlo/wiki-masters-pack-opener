@@ -9,14 +9,17 @@ Copier `.env.example` vers `.env`, puis renseigner :
 
 - `DISCORD_TOKEN`
 - `DISCORD_CLIENT_ID`
-- `DISCORD_GUILD_ID`
+- `DISCORD_GUILD_ID` (optionnel ; les commandes globales fonctionnent aussi en message privé)
 
 Le cookie Wiki Masters est fourni ensuite par `/compte connecter`. La réponse
 est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discord.
+Plusieurs cookies peuvent être enregistrés sous des noms différents ;
+`/account select` choisit le compte utilisé par les commandes suivantes.
 
 ## Commandes disponibles
 
-- `/compte connecter`, `/compte statut`, `/compte supprimer`
+- `/compte connecter`, `/compte lister`, `/compte statut`, `/compte supprimer`
+- `/account list`, `/account select`
 - `/pack ouvrir`, `/pack auto`
 - `/pack bonus`
 - `/marche scan`, `/marche mes-ventes`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`

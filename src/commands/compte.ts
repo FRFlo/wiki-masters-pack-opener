@@ -1,7 +1,7 @@
 import { WikiMasters } from "../../services/wiki";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "discord.js";
-import { deleteAccount, getAccount, upsertAccount } from "../../services/db";
+import { deleteAccount, getAccount, listAccountSessions, upsertAccount } from "../../services/db";
 
 import type { SlashCommand } from "../../types";
 const command: SlashCommand = {
@@ -14,17 +14,30 @@ const command: SlashCommand = {
 				.setDescription("Enregistrer un cookie")
 				.addStringOption((o) =>
 					o.setName("cookie").setDescription("Cookie HTTP").setRequired(true),
-				),
+				)
+				.addStringOption((o) => o.setName("nom").setDescription("Nom de ce compte")),
 		)
+		.addSubcommand((s) => s.setName("lister").setDescription("Lister tes comptes"))
 		.addSubcommand((s) => s.setName("statut").setDescription("Tester la session"))
 		.addSubcommand((s) => s.setName("supprimer").setDescription("Supprimer tes identifiants")),
 	execute: async (i) => {
 		const sub = i.options.getSubcommand();
 		if (sub === "connecter") {
-			upsertAccount(i.user.id, i.options.getString("cookie", true));
+			const name = i.options.getString("nom") || "Mon compte";
+			upsertAccount(i.user.id, i.options.getString("cookie", true), name);
 			return reply(
 				i,
-				"✅ Session enregistrée. Le cookie est conservé uniquement dans la base SQLite.",
+				`✅ Compte **${name}** enregistré et sélectionné. Le cookie reste uniquement dans SQLite.`,
+				true,
+			);
+		}
+		if (sub === "lister") {
+			const sessions = listAccountSessions(i.user.id);
+			return reply(
+				i,
+				sessions.length
+					? sessions.map((s) => `${s.active ? "✅" : "▫️"} **${s.name}**`).join("\n")
+					: "Aucun compte configuré.",
 				true,
 			);
 		}
