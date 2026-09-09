@@ -1,7 +1,13 @@
 import { WikiMasters } from "../../services/wiki";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "discord.js";
-import { deleteAccount, getAccount, listAccountSessions, upsertAccount } from "../../services/db";
+import {
+	deleteAccount,
+	getAccount,
+	listAccountSessions,
+	selectAccountSession,
+	upsertAccount,
+} from "../../services/db";
 
 import type { SlashCommand } from "../../types";
 const command: SlashCommand = {
@@ -18,6 +24,14 @@ const command: SlashCommand = {
 				.addStringOption((o) => o.setName("nom").setDescription("Nom de ce compte")),
 		)
 		.addSubcommand((s) => s.setName("lister").setDescription("Lister tes comptes"))
+		.addSubcommand((s) =>
+			s
+				.setName("selectionner")
+				.setDescription("Choisir le compte actif")
+				.addStringOption((o) =>
+					o.setName("nom").setDescription("Nom du compte").setRequired(true),
+				),
+		)
 		.addSubcommand((s) => s.setName("statut").setDescription("Tester la session"))
 		.addSubcommand((s) => s.setName("supprimer").setDescription("Supprimer tes identifiants")),
 	execute: async (i) => {
@@ -38,6 +52,16 @@ const command: SlashCommand = {
 				sessions.length
 					? sessions.map((s) => `${s.active ? "✅" : "▫️"} **${s.name}**`).join("\n")
 					: "Aucun compte configuré.",
+				true,
+			);
+		}
+		if (sub === "selectionner") {
+			const name = i.options.getString("nom", true);
+			return reply(
+				i,
+				selectAccountSession(i.user.id, name)
+					? `✅ Compte actif : **${name}**.`
+					: `❌ Compte introuvable : **${name}**.`,
 				true,
 			);
 		}

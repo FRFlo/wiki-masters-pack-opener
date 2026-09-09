@@ -14,13 +14,12 @@ Copier `.env.example` vers `.env`, puis renseigner :
 Le cookie Wiki Masters est fourni ensuite par `/compte connecter`. La réponse
 est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discord.
 Plusieurs cookies peuvent être enregistrés sous des noms différents ;
-`/account select` choisit le compte utilisé par les commandes suivantes.
+`/compte selectionner` choisit le compte utilisé par les commandes suivantes.
 
 ## Commandes disponibles
 
 - `/guide` (sections `demarrage`, `packs`, `marche`, `collection`, `automatisation`)
 - `/compte connecter`, `/compte lister`, `/compte statut`, `/compte supprimer`
-- `/account list`, `/account select`
 - `/pack ouvrir`, `/pack auto`
 - `/pack bonus`
 - `/marche scan`, `/marche mes-ventes`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`

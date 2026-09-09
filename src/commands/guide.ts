@@ -8,8 +8,8 @@ const sections = {
 			"Connecte un ou plusieurs comptes Wiki Masters. Les cookies restent privés et sont stockés dans SQLite.",
 		fields: [
 			{ name: "Connecter un compte", value: "`/compte connecter cookie nom`" },
-			{ name: "Lister les comptes", value: "`/account list`" },
-			{ name: "Changer de compte actif", value: "`/account select nom`" },
+			{ name: "Lister les comptes", value: "`/compte lister`" },
+			{ name: "Changer de compte actif", value: "`/compte selectionner nom`" },
 			{ name: "Tester la session", value: "`/compte statut`" },
 		],
 	},
