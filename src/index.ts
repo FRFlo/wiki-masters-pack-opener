@@ -26,8 +26,10 @@ import {
 	stats,
 	upsertAccount,
 	getSetting,
+	searchCatalog,
 } from "./db";
 import { WikiMasters } from "./wiki";
+import { syncCatalog } from "./catalog";
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;
@@ -76,7 +78,11 @@ const commands = [
 				.setName("miser")
 				.setDescription("Placer une mise")
 				.addStringOption((o) =>
-					o.setName("enchere").setDescription("ID de l’enchère").setRequired(true),
+					o
+						.setName("enchere")
+						.setDescription("ID de l’enchère")
+						.setAutocomplete(true)
+						.setRequired(true),
 				)
 				.addIntegerOption((o) =>
 					o.setName("montant").setDescription("Montant").setMinValue(1).setRequired(true),
@@ -100,7 +106,11 @@ const commands = [
 						),
 				)
 				.addStringOption((o) =>
-					o.setName("texte").setDescription("Texte, séparé par ;").setRequired(true),
+					o
+						.setName("texte")
+						.setDescription("Texte, séparé par ;")
+						.setAutocomplete(true)
+						.setRequired(true),
 				)
 				.addIntegerOption((o) =>
 					o.setName("plafond").setDescription("Plafond du chasseur"),
@@ -116,7 +126,11 @@ const commands = [
 				.setName("configurer")
 				.setDescription("Configurer le tag et le plafond")
 				.addStringOption((o) =>
-					o.setName("tag").setDescription("Nom du tag").setRequired(true),
+					o
+						.setName("tag")
+						.setDescription("Nom du tag")
+						.setAutocomplete(true)
+						.setRequired(true),
 				)
 				.addIntegerOption((o) =>
 					o
@@ -147,7 +161,11 @@ const commands = [
 				.setName("taguer")
 				.setDescription("Appliquer un tag aux cartes trouvées")
 				.addStringOption((o) =>
-					o.setName("tag").setDescription("Nom du tag").setRequired(true),
+					o
+						.setName("tag")
+						.setDescription("Nom du tag")
+						.setAutocomplete(true)
+						.setRequired(true),
 				)
 				.addStringOption((o) =>
 					o
@@ -161,7 +179,11 @@ const commands = [
 		.setName("cote")
 		.setDescription("Voir la cote d’une carte")
 		.addStringOption((o) =>
-			o.setName("carte").setDescription("ID de la carte").setRequired(true),
+			o
+				.setName("carte")
+				.setDescription("ID de la carte")
+				.setAutocomplete(true)
+				.setRequired(true),
 		),
 	new SlashCommandBuilder().setName("succes").setDescription("Voir les succès et récompenses"),
 	new SlashCommandBuilder()
@@ -183,7 +205,11 @@ const commands = [
 		.setName("rarete")
 		.setDescription("Vérifier une évolution de rareté")
 		.addStringOption((o) =>
-			o.setName("titre").setDescription("Titre Wikipédia exact").setRequired(true),
+			o
+				.setName("titre")
+				.setDescription("Titre Wikipédia exact")
+				.setAutocomplete(true)
+				.setRequired(true),
 		),
 	new SlashCommandBuilder()
 		.setName("sauvegarde")
@@ -237,6 +263,47 @@ async function requireApi(i: ChatInputCommandInteraction) {
 }
 
 client.on("interactionCreate", async (i) => {
+	if (i.isAutocomplete()) {
+		try {
+			const account = getAccount(i.user.id);
+			if (!account) return i.respond([]);
+			const focused = i.options.getFocused(true);
+			const sub = i.options.getSubcommand(false);
+			let kind = "";
+			let values: Array<{ value: string; label: string }> = [];
+			if (i.commandName === "marche" && sub === "miser" && focused.name === "enchere")
+				kind = "auction";
+			if (i.commandName === "collection" && sub === "taguer" && focused.name === "tag")
+				kind = "tag";
+			if (i.commandName === "cote" && focused.name === "carte") kind = "card";
+			if (i.commandName === "rarete" && focused.name === "titre") kind = "card-title";
+			if (i.commandName === "vente" && sub === "configurer" && focused.name === "tag")
+				kind = "tag";
+			if (i.commandName === "marche" && sub === "mot-cle" && focused.name === "texte") {
+				values = listKeywords(account.id)
+					.filter((x) => x.text.includes(String(focused.value).toLowerCase()))
+					.map((x) => ({ value: x.text, label: `${x.text} (${x.kind})` }));
+			}
+			if (kind === "card-title") {
+				values = searchCatalog(account.id, "card", focused.value).map((x) => ({
+					value: x.label,
+					label: `${x.label} (${x.value})`,
+				}));
+			} else if (kind) {
+				values = searchCatalog(account.id, kind, focused.value).map((x) => ({
+					value: x.value,
+					label: x.label,
+				}));
+			}
+			return i.respond(
+				values
+					.slice(0, 25)
+					.map((x) => ({ name: x.label.slice(0, 100), value: x.value.slice(0, 100) })),
+			);
+		} catch {
+			return i.respond([]);
+		}
+	}
 	if (i.isButton()) {
 		const r = await requireApi(i as any);
 		if (!r) return;
@@ -677,6 +744,17 @@ async function scheduler() {
 	}
 }
 setInterval(scheduler, Number(process.env.SCHEDULER_INTERVAL_MS || 180_000));
+async function catalogScheduler() {
+	for (const account of listAccounts()) {
+		try {
+			await syncCatalog(account);
+		} catch (error) {
+			console.warn(`Synchronisation autocomplete échouée pour ${account.name}:`, error);
+		}
+	}
+}
+setInterval(catalogScheduler, Number(process.env.CATALOG_SYNC_INTERVAL_MS || 900_000));
+void catalogScheduler();
 client.once("ready", () =>
 	console.log(`Wiki Masters Discord Bot connecté comme ${client.user?.tag}`),
 );

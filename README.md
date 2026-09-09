@@ -23,6 +23,13 @@ est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discor
 - `/vente lancer`, `/vente configurer`
 - `/collection chercher`, `/collection doublons`, `/collection stats`, `/collection taguer`
 - `/cote`, `/succes`, `/guilde`, `/souhaits`
+
+Les champs d’identifiants, de tags et de noms de pages proposent un
+autocomplete local. Le catalogue est synchronisé périodiquement par compte
+dans SQLite (cartes, enchères récentes et tags) ; les mots-clés sont lus
+directement depuis SQLite. La fréquence est réglable avec
+`CATALOG_SYNC_INTERVAL_MS`.
+
 - `/stats`
 - `/planning`
 

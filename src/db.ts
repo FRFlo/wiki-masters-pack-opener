@@ -38,6 +38,13 @@ CREATE TABLE IF NOT EXISTS events (
   payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS catalog (
+  account_id INTEGER NOT NULL, kind TEXT NOT NULL, value TEXT NOT NULL,
+  label TEXT NOT NULL, metadata TEXT NOT NULL DEFAULT '{}',
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(account_id, kind, value),
+  FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
 `);
 
 export function getAccount(discordUserId: string) {
@@ -143,6 +150,33 @@ export function stats(accountId: number) {
 			"SELECT type, COUNT(*) count FROM events WHERE account_id=? GROUP BY type ORDER BY count DESC",
 		)
 		.all(accountId) as Array<{ type: string; count: number }>;
+}
+export function upsertCatalog(
+	accountId: number,
+	kind: string,
+	value: string,
+	label: string,
+	metadata: unknown = {},
+) {
+	db.query(
+		`INSERT INTO catalog(account_id,kind,value,label,metadata) VALUES(?,?,?,?,?)
+    ON CONFLICT(account_id,kind,value) DO UPDATE SET label=excluded.label,metadata=excluded.metadata,updated_at=CURRENT_TIMESTAMP`,
+	).run(accountId, kind, value, label, JSON.stringify(metadata));
+}
+export function searchCatalog(accountId: number, kind: string, query: string, limit = 25) {
+	const pattern = `%${query.trim().toLowerCase()}%`;
+	return db
+		.query(
+			"SELECT value,label,metadata FROM catalog WHERE account_id=? AND kind=? AND (lower(value) LIKE ? OR lower(label) LIKE ?) ORDER BY label,value LIMIT ?",
+		)
+		.all(accountId, kind, pattern, pattern, limit) as Array<{
+		value: string;
+		label: string;
+		metadata: string;
+	}>;
+}
+export function clearCatalog(accountId: number, kind: string) {
+	db.query("DELETE FROM catalog WHERE account_id=? AND kind=?").run(accountId, kind);
 }
 export function exportAccount(accountId: number) {
 	return {

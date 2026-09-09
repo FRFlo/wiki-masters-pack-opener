@@ -14,11 +14,14 @@ const {
 	listSchedules,
 	listAccounts,
 	removeKeyword,
+	clearCatalog,
 	recordEvent,
+	searchCatalog,
 	setKeyword,
 	setSchedule,
 	setSetting,
 	stats,
+	upsertCatalog,
 	upsertAccount,
 } = await import("../src/db");
 
@@ -60,6 +63,20 @@ describe("SQLite persistence", () => {
 		deleteAccount(account.discord_user_id);
 		expect(getAccount(account.discord_user_id)).toBeNull();
 		expect(getSetting(account.id, "trash", "missing")).toBe("missing");
+	});
+
+	test("searches account-scoped autocomplete catalog", () => {
+		const account = getAccount("discord-b")!;
+		upsertCatalog(account.id, "card", "card-1", "Paris Saint-Germain", { rarity: "UR" });
+		upsertCatalog(account.id, "card", "card-2", "Paris FC");
+		upsertCatalog(account.id, "tag", "tag-1", "Trash");
+
+		expect(searchCatalog(account.id, "card", "saint")).toHaveLength(1);
+		expect(searchCatalog(account.id, "card", "card")).toHaveLength(2);
+		expect(searchCatalog(account.id, "tag", "trash")[0]?.value).toBe("tag-1");
+		expect(searchCatalog(getAccount("discord-a")?.id || 0, "card", "paris")).toHaveLength(0);
+		clearCatalog(account.id, "card");
+		expect(searchCatalog(account.id, "card", "paris")).toHaveLength(0);
 	});
 });
 
