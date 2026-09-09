@@ -8,6 +8,7 @@
     "check": "bunx tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "discord.js": "^14.21.0"
   },
   "devDependencies": {

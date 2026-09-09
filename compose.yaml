@@ -1,5 +1,5 @@
 services:
-  pack-opener:
+  wiki-masters-bot:
     build: .
     restart: unless-stopped
     environment:
