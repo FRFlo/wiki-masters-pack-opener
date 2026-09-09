@@ -20,10 +20,22 @@ export default {
 				.addIntegerOption((o) =>
 					o.setName("max").setDescription("Maximum").setRequired(true),
 				),
+		)
+		.addSubcommand((s) =>
+			s
+				.setName("auto")
+				.setDescription("Activer ou désactiver les ventes automatiques")
+				.addBooleanOption((o) =>
+					o.setName("active").setDescription("État").setRequired(true),
+				),
 		),
 	execute: async (i) => {
 		const r = await requireApi(i);
 		if (!r) return;
+		if (i.options.getSubcommand() === "auto") {
+			setSetting(r.account.id, "trash_enabled", i.options.getBoolean("active", true));
+			return reply(i, "✅ Trash Seller mis à jour.");
+		}
 		if (i.options.getSubcommand() === "configurer") {
 			setSetting(r.account.id, "sell_tag", i.options.getString("tag", true));
 			setSetting(r.account.id, "max_sales", i.options.getInteger("max", true));

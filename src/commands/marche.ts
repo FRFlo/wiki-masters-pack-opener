@@ -2,7 +2,7 @@ import { WikiMasters } from "../../services/wiki";
 import { getAccount } from "../../services/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import { listKeywords, setKeyword, recordEvent } from "../../services/db";
+import { listKeywords, setKeyword, setSetting, recordEvent } from "../../services/db";
 
 import type { SlashCommand } from "../../types";
 export default {
@@ -40,11 +40,23 @@ export default {
 				)
 				.addIntegerOption((o) => o.setName("plafond").setDescription("Plafond")),
 		)
-		.addSubcommand((s) => s.setName("mots-cles").setDescription("Lister")),
+		.addSubcommand((s) => s.setName("mots-cles").setDescription("Lister"))
+		.addSubcommand((s) =>
+			s
+				.setName("auto")
+				.setDescription("Activer ou désactiver les enchères automatiques")
+				.addBooleanOption((o) =>
+					o.setName("active").setDescription("État").setRequired(true),
+				),
+		),
 	execute: async (i) => {
 		const r = await requireApi(i);
 		if (!r) return;
 		const sub = i.options.getSubcommand();
+		if (sub === "auto") {
+			setSetting(r.account.id, "market_enabled", i.options.getBoolean("active", true));
+			return reply(i, "✅ Market Watcher mis à jour.");
+		}
 		if (sub === "mot-cle") {
 			for (const text of splitTerms(i.options.getString("texte", true)))
 				setKeyword(r.account.id, {

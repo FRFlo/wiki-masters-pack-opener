@@ -22,8 +22,8 @@ Plusieurs cookies peuvent être enregistrés sous des noms différents ;
 - `/compte connecter`, `/compte lister`, `/compte statut`, `/compte supprimer`
 - `/pack ouvrir`, `/pack auto`
 - `/pack bonus`
-- `/marche scan`, `/marche mes-ventes`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`
-- `/vente lancer`, `/vente configurer`
+- `/marche scan`, `/marche mes-ventes`, `/marche miser`, `/marche mot-cle`, `/marche mots-cles`, `/marche auto`
+- `/vente lancer`, `/vente configurer`, `/vente auto`
 - `/collection chercher`, `/collection doublons`, `/collection stats`, `/collection taguer`
 - `/cote`, `/succes`, `/guilde`, `/souhaits`
 
@@ -38,6 +38,14 @@ directement depuis SQLite. La fréquence est réglable avec
 
 Le scheduler exécute les modules activés avec des horaires séparés (`pack`,
 `market`, `trash`). Le fuseau par défaut est Europe/Paris.
+
+Pour automatiser entièrement un compte :
+
+1. `/compte connecter` avec le cookie Wiki Masters ;
+2. `/pack auto active:true` pour ouvrir les packs ;
+3. ajouter des mots-clés avec `/marche mot-cle`, puis `/marche auto active:true` ;
+4. `/vente configurer` avec le tag et le maximum, puis `/vente auto active:true` ;
+5. utiliser `/planning` pour limiter chaque module à une plage horaire.
 
 ## Tests
 
