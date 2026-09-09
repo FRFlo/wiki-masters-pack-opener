@@ -1,8 +1,8 @@
 import { AttachmentBuilder, SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { exportAccount, getAccount } from "../services/db";
-import { WikiMasters } from "../services/wiki";
-import type { SlashCommand } from "../types";
+import { exportAccount, getAccount } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()

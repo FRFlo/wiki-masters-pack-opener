@@ -1,5 +1,5 @@
 import type { Interaction } from "discord.js";
-import type { BotEvent } from "../types";
+import type { BotEvent } from "../../types";
 const e: BotEvent<"interactionCreate"> = {
 	name: "interactionCreate",
 	execute: (i: Interaction) => {

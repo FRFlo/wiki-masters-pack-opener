@@ -1,9 +1,9 @@
-import { WikiMasters } from "../services/wiki";
+import { WikiMasters } from "../../services/wiki";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "discord.js";
-import { deleteAccount, getAccount, upsertAccount } from "../services/db";
+import { deleteAccount, getAccount, upsertAccount } from "../../services/db";
 
-import type { SlashCommand } from "../types";
+import type { SlashCommand } from "../../types";
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName("compte")

@@ -1,9 +1,9 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { REST, Routes } from "discord.js";
-import { config } from "../config";
+import { config } from "../../config";
 import type { Client } from "discord.js";
-import type { SlashCommand } from "../types";
+import type { SlashCommand } from "../../types";
 export default async (client: Client) => {
 	const all: any[] = [];
 	for (const f of readdirSync(join(import.meta.dirname, "../commands")).filter(

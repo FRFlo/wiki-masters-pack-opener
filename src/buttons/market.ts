@@ -1,6 +1,6 @@
-import type { ButtonCommand } from "../types";
-import { getAccount } from "../services/db";
-import { WikiMasters } from "../services/wiki";
+import type { ButtonCommand } from "../../types";
+import { getAccount } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
 export default {
 	prefix: "wm_market_scan",
 	execute: async (i) => {

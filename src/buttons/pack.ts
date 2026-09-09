@@ -1,6 +1,6 @@
-import type { ButtonCommand } from "../types";
-import { getAccount, recordEvent } from "../services/db";
-import { WikiMasters } from "../services/wiki";
+import type { ButtonCommand } from "../../types";
+import { getAccount, recordEvent } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
 export default {
 	prefix: "wm_pack_open",
 	execute: async (i) => {

@@ -1,10 +1,10 @@
-import { WikiMasters } from "../services/wiki";
-import { getAccount } from "../services/db";
+import { WikiMasters } from "../../services/wiki";
+import { getAccount } from "../../services/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import { listKeywords, setKeyword, recordEvent } from "../services/db";
+import { listKeywords, setKeyword, recordEvent } from "../../services/db";
 
-import type { SlashCommand } from "../types";
+import type { SlashCommand } from "../../types";
 export default {
 	command: new SlashCommandBuilder()
 		.setName("marche")

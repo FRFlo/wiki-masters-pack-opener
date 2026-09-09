@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { getAccount, setSchedule } from "../services/db";
-import { WikiMasters } from "../services/wiki";
-import type { SlashCommand } from "../types";
+import { getAccount, setSchedule } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()

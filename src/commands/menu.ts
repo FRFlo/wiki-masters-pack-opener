@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
-import type { SlashCommand } from "../types";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()

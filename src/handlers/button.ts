@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Client } from "discord.js";
-import type { ButtonCommand } from "../types";
+import type { ButtonCommand } from "../../types";
 export default async (client: Client) => {
 	for (const f of readdirSync(join(import.meta.dirname, "../buttons")).filter((x) =>
 		x.endsWith(".ts"),

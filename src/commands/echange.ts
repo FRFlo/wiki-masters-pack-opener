@@ -1,29 +1,28 @@
 import { SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { getAccount } from "../services/db";
-import { WikiMasters } from "../services/wiki";
-import type { SlashCommand } from "../types";
+import { getAccount, recordEvent } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()
-		.setName("souhaits")
-		.setDescription("Voir ma liste de souhaits"),
+		.setName("echange")
+		.setDescription("Gérer un échange")
+		.addSubcommand((s) =>
+			s
+				.setName("accepter")
+				.setDescription("Accepter un échange")
+				.addStringOption((o) =>
+					o.setName("id").setDescription("ID de l’échange").setRequired(true),
+				),
+		),
 	execute: async (i) => {
 		const r = await requireApi(i);
 		if (!r) return;
-		await i.deferReply();
-		const d: any = await r.api.wishlist(0);
-		const cards = d?.cards || d?.data?.cards || [];
-		return i.editReply(
-			`⭐ **Ma liste de souhaits** (${d?.total ?? cards.length})\n` +
-				(cards
-					.slice(0, 30)
-					.map(
-						(x: any) =>
-							`• ${x.wikipedia_title || x.title || x.id} — ${x.rarity || "?"}`,
-					)
-					.join("\n") || "Aucun souhait."),
-		);
+		const id = i.options.getString("id", true);
+		await r.api.acceptTrade(id);
+		recordEvent(r.account.id, "trade_accepted", { id });
+		return reply(i, "✅ Échange accepté.", true);
 	},
 } as SlashCommand;
 

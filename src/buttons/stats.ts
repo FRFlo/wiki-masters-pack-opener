@@ -1,5 +1,5 @@
-import type { ButtonCommand } from "../types";
-import { getAccount, stats } from "../services/db";
+import type { ButtonCommand } from "../../types";
+import { getAccount, stats } from "../../services/db";
 export default {
 	prefix: "wm_stats",
 	execute: (i) => {

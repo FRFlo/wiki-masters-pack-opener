@@ -1,10 +1,10 @@
-import { WikiMasters } from "../services/wiki";
-import { getAccount } from "../services/db";
+import { WikiMasters } from "../../services/wiki";
+import { getAccount } from "../../services/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "discord.js";
-import { setSetting, recordEvent } from "../services/db";
+import { setSetting, recordEvent } from "../../services/db";
 
-import type { SlashCommand } from "../types";
+import type { SlashCommand } from "../../types";
 export default {
 	command: new SlashCommandBuilder()
 		.setName("pack")

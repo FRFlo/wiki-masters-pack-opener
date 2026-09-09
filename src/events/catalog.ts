@@ -1,6 +1,6 @@
-import type { BotEvent } from "../types";
-import { listAccounts } from "../services/db";
-import { syncCatalog } from "../services/catalog";
+import type { BotEvent } from "../../types";
+import { listAccounts } from "../../services/db";
+import { syncCatalog } from "../../services/catalog";
 const event: BotEvent<"clientReady"> = {
 	name: "clientReady",
 	once: true,

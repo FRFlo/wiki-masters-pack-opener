@@ -1,28 +1,21 @@
 import { SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { getAccount, recordEvent } from "../services/db";
-import { WikiMasters } from "../services/wiki";
-import type { SlashCommand } from "../types";
+import { getAccount, stats as getStats } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()
-		.setName("echange")
-		.setDescription("Gérer un échange")
-		.addSubcommand((s) =>
-			s
-				.setName("accepter")
-				.setDescription("Accepter un échange")
-				.addStringOption((o) =>
-					o.setName("id").setDescription("ID de l’échange").setRequired(true),
-				),
-		),
+		.setName("stats")
+		.setDescription("Statistiques et santé du bot"),
 	execute: async (i) => {
 		const r = await requireApi(i);
 		if (!r) return;
-		const id = i.options.getString("id", true);
-		await r.api.acceptTrade(id);
-		recordEvent(r.account.id, "trade_accepted", { id });
-		return reply(i, "✅ Échange accepté.", true);
+		const rows = getStats(r.account.id);
+		return reply(
+			i,
+			`📊 **Statistiques**\n${rows.map((x) => `• ${x.type}: ${x.count}`).join("\n") || "Aucun événement."}`,
+		);
 	},
 } as SlashCommand;
 

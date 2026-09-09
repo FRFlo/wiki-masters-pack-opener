@@ -1,17 +1,17 @@
 import { SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { getAccount } from "../services/db";
-import { WikiMasters } from "../services/wiki";
-import type { SlashCommand } from "../types";
+import { getAccount } from "../../services/db";
+import { WikiMasters } from "../../services/wiki";
+import type { SlashCommand } from "../../types";
 
 export default {
 	command: new SlashCommandBuilder()
-		.setName("rarete")
-		.setDescription("Vérifier une évolution de rareté")
+		.setName("cote")
+		.setDescription("Voir la cote d’une carte")
 		.addStringOption((o) =>
 			o
-				.setName("titre")
-				.setDescription("Titre Wikipédia exact")
+				.setName("carte")
+				.setDescription("ID de la carte")
 				.setAutocomplete(true)
 				.setRequired(true),
 		),
@@ -19,25 +19,15 @@ export default {
 		const r = await requireApi(i);
 		if (!r) return;
 		await i.deferReply();
-		const title = i.options.getString("titre", true);
-		const d: any = await r.api.monthlyViews(title);
-		const views = d?.items?.[0]?.views ?? null;
-		const rarity =
-			views === null
-				? "?"
-				: views >= 20000
-					? "L"
-					: views >= 5000
-						? "UR"
-						: views >= 1000
-							? "SR"
-							: views >= 250
-								? "R"
-								: views >= 50
-									? "PC"
-									: "C";
+		const cardId = i.options.getString("carte", true);
+		const d: any = await r.api.salesSummary(cardId);
+		const summary = d?.summary || d;
 		return i.editReply(
-			`🔭 **${title}** : ${views ?? "?"} vues le mois dernier → rareté théorique **${rarity}**.`,
+			`📈 **Cote ${cardId}**\n` +
+				`Ventes : ${summary?.count ?? summary?.sales_count ?? "?"}\n` +
+				`Dernier prix : ${summary?.last_price ?? "?"} 💰\n` +
+				`Moyenne : ${summary?.average ?? summary?.avg_price ?? "?"} 💰\n` +
+				`Min / max : ${summary?.min ?? "?"} / ${summary?.max ?? "?"} 💰`,
 		);
 	},
 } as SlashCommand;
