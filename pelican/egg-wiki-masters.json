@@ -12,7 +12,7 @@
 		"Bun Latest": "ghcr.io/pelican-eggs/yolks:bun_latest"
 	},
 	"file_denylist": [],
-	"startup": "bun install --frozen-lockfile && bun run start",
+	"startup": "mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start",
 	"config": {
 		"files": "{}",
 		"startup": "{}",
@@ -21,15 +21,42 @@
 	},
 	"scripts": {
 		"installation": {
-			"script": "#!/bin/bash\nset -euo pipefail\ncd /mnt/server\nif [ ! -f package.json ]; then\n    echo 'Upload the Wiki Masters bot files before starting this server.'\n    exit 1\nfi\necho 'Wiki Masters bot files detected.'",
+			"script": "#!/bin/bash\nset -euo pipefail\ncd /mnt/server\n: \"${GITHUB_REPOSITORY:=https://github.com/FRFlo/wiki-masters-pack-opener.git}\"\n: \"${GITHUB_BRANCH:=main}\"\nif [ -n \"${GITHUB_TOKEN:-}\" ]; then\n    AUTH_HEADER=\"AUTHORIZATION: bearer ${GITHUB_TOKEN}\"\n    git -c http.extraheader=\"${AUTH_HEADER}\" clone --branch \"${GITHUB_BRANCH}\" \"${GITHUB_REPOSITORY}\" /tmp/wiki-masters-bot\nelse\n    git clone --branch \"${GITHUB_BRANCH}\" \"${GITHUB_REPOSITORY}\" /tmp/wiki-masters-bot\nfi\ncp -a /tmp/wiki-masters-bot/. /mnt/server/\nrm -rf /tmp/wiki-masters-bot\nif [ ! -f package.json ]; then\n    echo 'The Wiki Masters repository did not contain package.json.' >&2\n    exit 1\nfi\nmkdir -p /mnt/server/data\necho 'Wiki Masters bot repository cloned successfully.'",
 			"container": "ghcr.io/pelican-eggs/installers:debian",
 			"entrypoint": "bash"
 		}
 	},
 	"startup_commands": {
-		"Default": "bun install --frozen-lockfile && bun run start"
+		"Default": "mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start"
 	},
 	"variables": [
+		{
+			"name": "Git repository",
+			"description": "Repository URL to clone during installation.",
+			"env_variable": "GITHUB_REPOSITORY",
+			"default_value": "https://github.com/FRFlo/wiki-masters-pack-opener.git",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:255"
+		},
+		{
+			"name": "Git branch",
+			"description": "Branch to clone during installation.",
+			"env_variable": "GITHUB_BRANCH",
+			"default_value": "main",
+			"user_viewable": true,
+			"user_editable": true,
+			"rules": "required|string|max:100"
+		},
+		{
+			"name": "GitHub token",
+			"description": "Token used to clone a private GitHub repository.",
+			"env_variable": "GITHUB_TOKEN",
+			"default_value": "",
+			"user_viewable": false,
+			"user_editable": true,
+			"rules": "nullable|string|max:255"
+		},
 		{
 			"name": "Discord token",
 			"description": "Discord bot token.",
