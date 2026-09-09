@@ -5,4 +5,5 @@ cookie
 node_modules/
 npm-debug.log*
 .pi/
+.tmp-test-*.sqlite*
 

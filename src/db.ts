@@ -81,7 +81,7 @@ export function setKeyword(accountId: number, keyword: Omit<KeywordRow, "account
     ON CONFLICT(account_id,kind,text) DO UPDATE SET cap=excluded.cap,mode=excluded.mode,rarity=excluded.rarity,enabled=excluded.enabled,auto_disable=excluded.auto_disable`).run(
 		accountId,
 		keyword.kind,
-		keyword.text.toLowerCase(),
+		keyword.text.trim().toLowerCase(),
 		keyword.cap ?? null,
 		keyword.mode ?? null,
 		keyword.rarity ?? null,
@@ -108,7 +108,7 @@ export function removeKeyword(accountId: number, kind: string, text: string) {
 	db.query("DELETE FROM keywords WHERE account_id=? AND kind=? AND text=?").run(
 		accountId,
 		kind,
-		text.toLowerCase(),
+		text.trim().toLowerCase(),
 	);
 }
 export function setSchedule(

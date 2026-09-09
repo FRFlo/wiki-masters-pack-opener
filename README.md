@@ -27,6 +27,21 @@ est éphémère et le cookie est stocké dans SQLite pour l’utilisateur Discor
 Le scheduler exécute les modules activés avec des horaires séparés (`pack`,
 `market`, `trash`). Le fuseau par défaut est Europe/Paris.
 
+## Tests
+
+```sh
+bun test
+```
+
+Les tests d’intégration en lecture seule utilisent le cookie local `cookie` :
+
+```sh
+RUN_LIVE_TESTS=1 bun test tests/live.test.ts
+```
+
+Ils vérifient la balance, le marketplace et la collection sans effectuer
+d’action d’achat, d’enchère ou de vente.
+
 ## Docker
 
 ```sh
