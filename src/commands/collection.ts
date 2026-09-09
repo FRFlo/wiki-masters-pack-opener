@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { getAccount } from "../../services/db";
 import { WikiMasters } from "../../services/wiki";
@@ -48,9 +48,23 @@ export default {
 		if (sub === "stats") {
 			const d: any = await r.api.collectionStats();
 			const data = d?.stats || d?.data || d;
-			return i.editReply(
-				`📚 **Collection** : ${data?.total ?? "?"} cartes\n${formatData(data?.rarityCounts || data)}`,
-			);
+			const counts = data?.rarityCounts || {};
+			return i.editReply({
+				embeds: [
+					new EmbedBuilder()
+						.setColor(0x5865f2)
+						.setTitle("📚 Statistiques de collection")
+						.addFields(
+							{ name: "Total", value: `${data?.total ?? "?"} cartes`, inline: true },
+							...Object.entries(counts).map(([rarity, count]) => ({
+								name: rarity,
+								value: String(count),
+								inline: true,
+							})),
+						)
+						.setTimestamp(),
+				],
+			});
 		}
 		if (sub === "taguer") {
 			const ids = splitTerms(i.options.getString("ids", true));
@@ -106,7 +120,3 @@ const splitTerms = (value: string) =>
 		.split(";")
 		.map((term) => term.trim())
 		.filter(Boolean);
-const formatData = (data: unknown) => {
-	const value = JSON.stringify(data);
-	return value.length > 1800 ? `${value.slice(0, 1800)}…` : value;
-};

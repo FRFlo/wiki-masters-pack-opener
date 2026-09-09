@@ -66,7 +66,40 @@ export default {
 			const amount = i.options.getInteger("montant", true),
 				d = await r.api.bid(i.options.getString("enchere", true), amount);
 			recordEvent(r.account.id, "bid", d);
-			return i.editReply(`✅ Mise de **${amount}** 💰 placée.\n${formatData(d)}`);
+			return i.editReply({
+				embeds: [
+					new EmbedBuilder()
+						.setColor(0x57f287)
+						.setTitle("✅ Mise placée")
+						.setDescription(`Ton enchère de **${amount} 💰** a été envoyée.`)
+						.addFields(
+							{
+								name: "Enchère",
+								value: i.options.getString("enchere", true),
+								inline: true,
+							},
+							...(d?.balance === undefined
+								? []
+								: [
+										{
+											name: "Solde restant",
+											value: `${d.balance} 💰`,
+											inline: true,
+										},
+									]),
+							...(d?.current_bid === undefined
+								? []
+								: [
+										{
+											name: "Mise actuelle",
+											value: `${d.current_bid} 💰`,
+											inline: true,
+										},
+									]),
+						)
+						.setTimestamp(),
+				],
+			});
 		}
 		if (sub === "mes-ventes") {
 			const a: any[] = await r.api.myActiveSales();
@@ -116,8 +149,3 @@ const splitTerms = (value: string) =>
 		.split(";")
 		.map((x) => x.trim())
 		.filter(Boolean);
-
-const formatData = (data: unknown) => {
-	const value = JSON.stringify(data);
-	return value.length > 1800 ? `${value.slice(0, 1800)}…` : value;
-};
