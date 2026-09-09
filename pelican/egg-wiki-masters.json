@@ -12,7 +12,7 @@
 		"Bun Latest": "ghcr.io/pelican-eggs/yolks:bun_latest"
 	},
 	"file_denylist": [],
-	"startup": "mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start",
+	"startup": "if [ -d /home/container/.git ]; then if [ -n \"${GITHUB_TOKEN:-}\" ]; then git -C /home/container -c http.extraheader=\"AUTHORIZATION: bearer ${GITHUB_TOKEN}\" pull --ff-only origin \"${GITHUB_BRANCH:-main}\" || echo 'Git pull failed; continuing with the current files.'; else git -C /home/container pull --ff-only origin \"${GITHUB_BRANCH:-main}\" || echo 'Git pull failed; continuing with the current files.'; fi; fi; mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start",
 	"config": {
 		"files": "{}",
 		"startup": "{}",
@@ -27,7 +27,7 @@
 		}
 	},
 	"startup_commands": {
-		"Default": "mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start"
+		"Default": "if [ -d /home/container/.git ]; then if [ -n \"${GITHUB_TOKEN:-}\" ]; then git -C /home/container -c http.extraheader=\"AUTHORIZATION: bearer ${GITHUB_TOKEN}\" pull --ff-only origin \"${GITHUB_BRANCH:-main}\" || echo 'Git pull failed; continuing with the current files.'; else git -C /home/container pull --ff-only origin \"${GITHUB_BRANCH:-main}\" || echo 'Git pull failed; continuing with the current files.'; fi; fi; mkdir -p /home/container/data && bun install --frozen-lockfile && bun run start"
 	},
 	"variables": [
 		{
